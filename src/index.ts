@@ -46,6 +46,7 @@ async function loadSlice(path: string): Promise<Slice> {
 		}
 	};
 }
+let c = 0;
 
 function slicesToVoxels(slices: Slice[]): THREE.Mesh[] {
 	const r : THREE.Mesh[] = [];
@@ -59,6 +60,8 @@ function slicesToVoxels(slices: Slice[]): THREE.Mesh[] {
 				const material = new THREE.MeshLambertMaterial({ color: color });
 				const cube = new THREE.Mesh(geometry, material);
 				cube.position.set(x, y, z);
+				// cube.castShadow = true;
+				++c;
 				r.push(cube);
 			});
 		});
@@ -77,12 +80,10 @@ function cctvPole(thickness: number, height: number, gab: number, plateFrame: TH
 	const m1 = new THREE.Mesh(handle, mat);
 	const m2 = new THREE.Mesh(plate, mat);
 
-	m0.castShadow = true;
-	m0.receiveShadow = true;
-	m1.castShadow = true;
-	m1.receiveShadow = true;
-	m2.receiveShadow = true;
-
+	// m0.castShadow = true;
+	// m1.castShadow = true;
+	// m2.receiveShadow = true;
+	
 	const plateGroup = new THREE.Group;
 	plateGroup.add(m2);
 	if (display){
@@ -103,6 +104,10 @@ function cctvPole(thickness: number, height: number, gab: number, plateFrame: TH
 			l.target.position.set(t.x, t.y, t.z + 1);
 			plateGroup.add(l);
 			plateGroup.add(l.target);
+			
+			// l.castShadow = true;
+			// l.shadow.mapSize.width = 512;
+			// l.shadow.mapSize.height = 512;
 		});
 	}
 
@@ -143,7 +148,7 @@ async function main(){
 	]);
 
 	const renderer = new THREE.WebGLRenderer();
-	renderer.shadowMap.enabled = true;
+	//renderer.shadowMap.enabled = true;
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 	
@@ -164,7 +169,7 @@ async function main(){
 	const plane = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), terrainMaterial);
 	plane.material.side = THREE.DoubleSide;
 	plane.rotation.x = Math.PI * .5;
-	plane.receiveShadow = true;
+	// plane.receiveShadow = true;
 	scene.add(plane);
 
 	const cubes = slicesToVoxels([side, semiddle, middle, middle, middle, semiddle, side]);
@@ -179,7 +184,6 @@ async function main(){
 	group.translateY(.5);
 	const g2 = new THREE.Group();
 	g2.add(group);
-	g2.castShadow = true;
 
 	const headlights = [
 		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.7, 100, Math.PI * .32),
@@ -190,6 +194,10 @@ async function main(){
 	headlights.forEach(h => {
 		const t = h.position;
 		h.target.position.set(t.x, t.y, t.z - 1);
+		
+		// h.castShadow = true;
+		// h.shadow.mapSize.width = 256;
+		// h.shadow.mapSize.height = 256;
 	});
 	group.add(...headlights);
 	group.add(...headlights.map(h => h.target));
@@ -208,13 +216,13 @@ async function main(){
 	const cctvRT = new THREE.WebGLRenderTarget(cctvFrame.x, cctvFrame.y);
 	const cctvDisplayPlane = new THREE.Mesh(new THREE.PlaneGeometry(63, 30), new THREE.MeshBasicMaterial({map : cctvRT.texture}));
 	cctvDisplayPlane.material.side = THREE.DoubleSide;
-	
+
 	const cctv = new THREE.PerspectiveCamera(75, cctvFrame.x / cctvFrame.y, 0.1, 1000);
 
 	const cctvAngle = Math.PI * .2;
 	const cctvLights = [
 		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
-		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
+		//new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
 		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32)
 	];
 	const cctvPoleGroup = cctvPole(2, 42, 12, cctvDisplay, cctvAngle, new THREE.Color(.42, .42, .42), cctvDisplayPlane, cctv, cctvLights);
