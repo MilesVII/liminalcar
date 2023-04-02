@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { Vector2, Vector3 } from "three";
+import { BufferGeometry, Vector2, Vector3 } from "three";
+import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 main();
 
@@ -46,10 +47,10 @@ async function loadSlice(path: string): Promise<Slice> {
 		}
 	};
 }
-let c = 0;
 
-function slicesToVoxels(slices: Slice[]): THREE.Mesh[] {
-	const r : THREE.Mesh[] = [];
+function slicesToVoxels(slices: Slice[]): THREE.Mesh {
+	const gDash: BufferGeometry[] = [];
+	const material = new THREE.MeshLambertMaterial({ vertexColors: true });
 
 	slices.forEach((slice, x) => {
 		chonks(slice.data, slice.dims.w).reverse().forEach((row, y) => {
@@ -57,17 +58,25 @@ function slicesToVoxels(slices: Slice[]): THREE.Mesh[] {
 				if (px == null) return;
 				const color = new THREE.Color(px.r, px.g, px.b);
 				const geometry = new THREE.BoxGeometry(1, 1, 1);
-				const material = new THREE.MeshLambertMaterial({ color: color });
-				const cube = new THREE.Mesh(geometry, material);
-				cube.position.set(x, y, z);
-				// cube.castShadow = true;
-				++c;
-				r.push(cube);
+				geometry.translate(x, y, z);
+
+				const positionAttribute = geometry.getAttribute("position");
+				const colors = [];
+				for (let _ = 0; _ < positionAttribute.count; _ += 3) {
+					colors.push( color.r, color.g, color.b );
+					colors.push( color.r, color.g, color.b );
+					colors.push( color.r, color.g, color.b );
+				}
+				geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+				gDash.push(geometry);
 			});
 		});
 	});
 
-	return r;
+	const g = BufferGeometryUtils.mergeBufferGeometries(gDash);
+
+	return new THREE.Mesh(g, material);
 }
 
 function cctvPole(thickness: number, height: number, gab: number, plateFrame: THREE.Vector2, plateAngle: number, color: THREE.Color, display?: THREE.Mesh, camera?: THREE.Camera, lights?: THREE.SpotLight[]): THREE.Group {
@@ -80,9 +89,9 @@ function cctvPole(thickness: number, height: number, gab: number, plateFrame: TH
 	const m1 = new THREE.Mesh(handle, mat);
 	const m2 = new THREE.Mesh(plate, mat);
 
-	// m0.castShadow = true;
-	// m1.castShadow = true;
-	// m2.receiveShadow = true;
+	m0.castShadow = true;
+	m1.castShadow = true;
+	m2.receiveShadow = true;
 	
 	const plateGroup = new THREE.Group;
 	plateGroup.add(m2);
@@ -105,9 +114,9 @@ function cctvPole(thickness: number, height: number, gab: number, plateFrame: TH
 			plateGroup.add(l);
 			plateGroup.add(l.target);
 			
-			// l.castShadow = true;
-			// l.shadow.mapSize.width = 512;
-			// l.shadow.mapSize.height = 512;
+			l.castShadow = true;
+			l.shadow.mapSize.width = 1024;
+			l.shadow.mapSize.height = 1024;
 		});
 	}
 
@@ -148,7 +157,7 @@ async function main(){
 	]);
 
 	const renderer = new THREE.WebGLRenderer();
-	//renderer.shadowMap.enabled = true;
+	renderer.shadowMap.enabled = true;
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 	
@@ -166,15 +175,17 @@ async function main(){
 	terrainTexture.wrapT = THREE.RepeatWrapping;
 	terrainTexture.repeat.set(32, 32);
 	const terrainMaterial = new THREE.MeshLambertMaterial({map : terrainTexture});
-	const plane = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), terrainMaterial);
-	plane.material.side = THREE.DoubleSide;
-	plane.rotation.x = Math.PI * .5;
-	// plane.receiveShadow = true;
-	scene.add(plane);
+	const terrain = new THREE.Mesh(new THREE.PlaneGeometry(2048, 2048), terrainMaterial);
+	terrain.material.side = THREE.DoubleSide;
+	terrain.rotation.x = Math.PI * .5;
+	terrain.receiveShadow = true;
+	scene.add(terrain);
 
 	const cubes = slicesToVoxels([side, semiddle, middle, middle, middle, semiddle, side]);
+	cubes.castShadow = true;
+	cubes.receiveShadow = true;
 	const group = new THREE.Group();
-	cubes.forEach(c => group.add(c));
+	group.add(cubes);
 
 	const carBox = new THREE.Box3().setFromObject(group);
 	const carCenter = new Vector3();
@@ -194,10 +205,7 @@ async function main(){
 	headlights.forEach(h => {
 		const t = h.position;
 		h.target.position.set(t.x, t.y, t.z - 1);
-		
-		// h.castShadow = true;
-		// h.shadow.mapSize.width = 256;
-		// h.shadow.mapSize.height = 256;
+		h.castShadow = true;
 	});
 	group.add(...headlights);
 	group.add(...headlights.map(h => h.target));
@@ -221,12 +229,13 @@ async function main(){
 
 	const cctvAngle = Math.PI * .2;
 	const cctvLights = [
-		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
-		//new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
-		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32)
+		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 1.3, 400, Math.PI * .32),
+		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 1.3, 400, Math.PI * .32),
+		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 1.3, 400, Math.PI * .32)
 	];
 	const cctvPoleGroup = cctvPole(2, 42, 12, cctvDisplay, cctvAngle, new THREE.Color(.42, .42, .42), cctvDisplayPlane, cctv, cctvLights);
-	cctvPoleGroup.position.set(-60, 0, -64);
+	cctvPoleGroup.position.set(0, 0, -64);
+	cctvPoleGroup.rotateY(Math.PI * .2);
 	scene.add(cctvPoleGroup);
 
 	const keyboardState: any = {};
@@ -266,12 +275,12 @@ function moveTowardsZero(value: number, offset: number){
 function mainloop(state: State){
 	requestAnimationFrame(() => mainloop(state));
 
-	const acceleration = .03;
-	const deceleration = .01;
+	const acceleration = .01;
+	const deceleration = .006;
 	const maxSpeed = 1;
 
-	const steeringPower = .01;
-	const desteeringPower = steeringPower * .32;
+	const steeringPower = .001;
+	const desteeringPower = steeringPower * .7;
 	const steeringMax = Math.PI * .02;
 
 	if (state.keyboard["KeyW"] || state.keyboard["KeyS"]){
@@ -301,4 +310,5 @@ function mainloop(state: State){
 	state.renderer.render(state.scene, state.cctv.camera);
 	state.renderer.setRenderTarget(null);
 	state.renderer.render(state.scene, state.camera);
+	//console.log(state.renderer.info.render.calls)
 }

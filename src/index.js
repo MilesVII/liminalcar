@@ -288,35 +288,35 @@
   function floorPowerOfTwo(value) {
     return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
   }
-  function setQuaternionFromProperEuler(q, a, b, c2, order) {
+  function setQuaternionFromProperEuler(q, a, b, c, order) {
     const cos = Math.cos;
     const sin = Math.sin;
-    const c22 = cos(b / 2);
+    const c2 = cos(b / 2);
     const s2 = sin(b / 2);
-    const c13 = cos((a + c2) / 2);
-    const s13 = sin((a + c2) / 2);
-    const c1_3 = cos((a - c2) / 2);
-    const s1_3 = sin((a - c2) / 2);
-    const c3_1 = cos((c2 - a) / 2);
-    const s3_1 = sin((c2 - a) / 2);
+    const c13 = cos((a + c) / 2);
+    const s13 = sin((a + c) / 2);
+    const c1_3 = cos((a - c) / 2);
+    const s1_3 = sin((a - c) / 2);
+    const c3_1 = cos((c - a) / 2);
+    const s3_1 = sin((c - a) / 2);
     switch (order) {
       case "XYX":
-        q.set(c22 * s13, s2 * c1_3, s2 * s1_3, c22 * c13);
+        q.set(c2 * s13, s2 * c1_3, s2 * s1_3, c2 * c13);
         break;
       case "YZY":
-        q.set(s2 * s1_3, c22 * s13, s2 * c1_3, c22 * c13);
+        q.set(s2 * s1_3, c2 * s13, s2 * c1_3, c2 * c13);
         break;
       case "ZXZ":
-        q.set(s2 * c1_3, s2 * s1_3, c22 * s13, c22 * c13);
+        q.set(s2 * c1_3, s2 * s1_3, c2 * s13, c2 * c13);
         break;
       case "XZX":
-        q.set(c22 * s13, s2 * s3_1, s2 * c3_1, c22 * c13);
+        q.set(c2 * s13, s2 * s3_1, s2 * c3_1, c2 * c13);
         break;
       case "YXY":
-        q.set(s2 * c3_1, c22 * s13, s2 * s3_1, c22 * c13);
+        q.set(s2 * c3_1, c2 * s13, s2 * s3_1, c2 * c13);
         break;
       case "ZYZ":
-        q.set(s2 * s3_1, s2 * c3_1, c22 * s13, c22 * c13);
+        q.set(s2 * s3_1, s2 * c3_1, c2 * s13, c2 * c13);
         break;
       default:
         console.warn("THREE.MathUtils: .setQuaternionFromProperEuler() encountered an unknown order: " + order);
@@ -627,11 +627,11 @@
       return this;
     }
     rotateAround(center, angle) {
-      const c2 = Math.cos(angle), s = Math.sin(angle);
+      const c = Math.cos(angle), s = Math.sin(angle);
       const x = this.x - center.x;
       const y = this.y - center.y;
-      this.x = x * c2 - y * s + center.x;
-      this.y = x * s + y * c2 + center.y;
+      this.x = x * c - y * s + center.x;
+      this.y = x * s + y * c + center.y;
       return this;
     }
     random() {
@@ -763,8 +763,8 @@
     }
     determinant() {
       const te = this.elements;
-      const a = te[0], b = te[1], c2 = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
-      return a * e * i - a * f * h - b * d * i + b * f * g + c2 * d * h - c2 * e * g;
+      const a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
+      return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
     }
     invert() {
       const te = this.elements, n11 = te[0], n21 = te[1], n31 = te[2], n12 = te[3], n22 = te[4], n32 = te[5], n13 = te[6], n23 = te[7], n33 = te[8], t11 = n33 * n22 - n32 * n23, t12 = n32 * n13 - n33 * n12, t13 = n23 * n12 - n22 * n13, det = n11 * t11 + n21 * t12 + n31 * t13;
@@ -813,15 +813,15 @@
       return this;
     }
     setUvTransform(tx, ty, sx, sy, rotation, cx, cy) {
-      const c2 = Math.cos(rotation);
+      const c = Math.cos(rotation);
       const s = Math.sin(rotation);
       this.set(
-        sx * c2,
+        sx * c,
         sx * s,
-        -sx * (c2 * cx + s * cy) + cx + tx,
+        -sx * (c * cx + s * cy) + cx + tx,
         -sy * s,
-        sy * c2,
-        -sy * (-s * cx + c2 * cy) + cy + ty,
+        sy * c,
+        -sy * (-s * cx + c * cy) + cy + ty,
         0,
         0,
         1
@@ -857,14 +857,14 @@
       return this;
     }
     makeRotation(theta) {
-      const c2 = Math.cos(theta);
+      const c = Math.cos(theta);
       const s = Math.sin(theta);
       this.set(
-        c2,
+        c,
         -s,
         0,
         s,
-        c2,
+        c,
         0,
         0,
         0,
@@ -930,11 +930,11 @@
   function createElementNS(name) {
     return document.createElementNS("http://www.w3.org/1999/xhtml", name);
   }
-  function SRGBToLinear(c2) {
-    return c2 < 0.04045 ? c2 * 0.0773993808 : Math.pow(c2 * 0.9478672986 + 0.0521327014, 2.4);
+  function SRGBToLinear(c) {
+    return c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
   }
-  function LinearToSRGB(c2) {
-    return c2 < 31308e-7 ? c2 * 12.92 : 1.055 * Math.pow(c2, 0.41666) - 0.055;
+  function LinearToSRGB(c) {
+    return c < 31308e-7 ? c * 12.92 : 1.055 * Math.pow(c, 0.41666) - 0.055;
   }
   var LINEAR_SRGB_TO_LINEAR_DISPLAY_P3 = /* @__PURE__ */ new Matrix3().fromArray([
     0.8224621,
@@ -2497,8 +2497,8 @@
       this.z = sinPhiRadius * Math.cos(theta);
       return this;
     }
-    setFromCylindrical(c2) {
-      return this.setFromCylindricalCoords(c2.radius, c2.theta, c2.y);
+    setFromCylindrical(c) {
+      return this.setFromCylindricalCoords(c.radius, c.theta, c.y);
     }
     setFromCylindricalCoords(radius, theta, y) {
       this.x = radius * Math.sin(theta);
@@ -2534,10 +2534,10 @@
       this.z = e._z;
       return this;
     }
-    setFromColor(c2) {
-      this.x = c2.r;
-      this.y = c2.g;
-      this.z = c2.b;
+    setFromColor(c) {
+      this.x = c.r;
+      this.y = c.g;
+      this.z = c.b;
       return this;
     }
     equals(v) {
@@ -3062,7 +3062,7 @@
       const a01 = -this.direction.dot(_segDir);
       const b0 = _diff.dot(this.direction);
       const b1 = -_diff.dot(_segDir);
-      const c2 = _diff.lengthSq();
+      const c = _diff.lengthSq();
       const det = Math.abs(1 - a01 * a01);
       let s0, s1, sqrDist, extDet;
       if (det > 0) {
@@ -3075,36 +3075,36 @@
               const invDet = 1 / det;
               s0 *= invDet;
               s1 *= invDet;
-              sqrDist = s0 * (s0 + a01 * s1 + 2 * b0) + s1 * (a01 * s0 + s1 + 2 * b1) + c2;
+              sqrDist = s0 * (s0 + a01 * s1 + 2 * b0) + s1 * (a01 * s0 + s1 + 2 * b1) + c;
             } else {
               s1 = segExtent;
               s0 = Math.max(0, -(a01 * s1 + b0));
-              sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c2;
+              sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
             }
           } else {
             s1 = -segExtent;
             s0 = Math.max(0, -(a01 * s1 + b0));
-            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c2;
+            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
           }
         } else {
           if (s1 <= -extDet) {
             s0 = Math.max(0, -(-a01 * segExtent + b0));
             s1 = s0 > 0 ? -segExtent : Math.min(Math.max(-segExtent, -b1), segExtent);
-            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c2;
+            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
           } else if (s1 <= extDet) {
             s0 = 0;
             s1 = Math.min(Math.max(-segExtent, -b1), segExtent);
-            sqrDist = s1 * (s1 + 2 * b1) + c2;
+            sqrDist = s1 * (s1 + 2 * b1) + c;
           } else {
             s0 = Math.max(0, -(a01 * segExtent + b0));
             s1 = s0 > 0 ? segExtent : Math.min(Math.max(-segExtent, -b1), segExtent);
-            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c2;
+            sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
           }
         }
       } else {
         s1 = a01 > 0 ? -segExtent : segExtent;
         s0 = Math.max(0, -(a01 * s1 + b0));
-        sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c2;
+        sqrDist = -s0 * s0 + s1 * (s1 + 2 * b1) + c;
       }
       if (optionalPointOnRay) {
         optionalPointOnRay.copy(this.origin).addScaledVector(this.direction, s0);
@@ -3206,9 +3206,9 @@
     intersectsBox(box) {
       return this.intersectBox(box, _vector$9) !== null;
     }
-    intersectTriangle(a, b, c2, backfaceCulling, target) {
+    intersectTriangle(a, b, c, backfaceCulling, target) {
       _edge1.subVectors(b, a);
-      _edge2.subVectors(c2, a);
+      _edge2.subVectors(c, a);
       _normal$1.crossVectors(_edge1, _edge2);
       let DdN = this.direction.dot(_normal$1);
       let sign;
@@ -3423,21 +3423,21 @@
       const te = this.elements;
       const x = euler.x, y = euler.y, z = euler.z;
       const a = Math.cos(x), b = Math.sin(x);
-      const c2 = Math.cos(y), d = Math.sin(y);
+      const c = Math.cos(y), d = Math.sin(y);
       const e = Math.cos(z), f = Math.sin(z);
       if (euler.order === "XYZ") {
         const ae = a * e, af = a * f, be = b * e, bf = b * f;
-        te[0] = c2 * e;
-        te[4] = -c2 * f;
+        te[0] = c * e;
+        te[4] = -c * f;
         te[8] = d;
         te[1] = af + be * d;
         te[5] = ae - bf * d;
-        te[9] = -b * c2;
+        te[9] = -b * c;
         te[2] = bf - ae * d;
         te[6] = be + af * d;
-        te[10] = a * c2;
+        te[10] = a * c;
       } else if (euler.order === "YXZ") {
-        const ce = c2 * e, cf = c2 * f, de = d * e, df = d * f;
+        const ce = c * e, cf = c * f, de = d * e, df = d * f;
         te[0] = ce + df * b;
         te[4] = de * b - cf;
         te[8] = a * d;
@@ -3446,9 +3446,9 @@
         te[9] = -b;
         te[2] = cf * b - de;
         te[6] = df + ce * b;
-        te[10] = a * c2;
+        te[10] = a * c;
       } else if (euler.order === "ZXY") {
-        const ce = c2 * e, cf = c2 * f, de = d * e, df = d * f;
+        const ce = c * e, cf = c * f, de = d * e, df = d * f;
         te[0] = ce - df * b;
         te[4] = -a * f;
         te[8] = de + cf * b;
@@ -3457,21 +3457,21 @@
         te[9] = df - ce * b;
         te[2] = -a * d;
         te[6] = b;
-        te[10] = a * c2;
+        te[10] = a * c;
       } else if (euler.order === "ZYX") {
         const ae = a * e, af = a * f, be = b * e, bf = b * f;
-        te[0] = c2 * e;
+        te[0] = c * e;
         te[4] = be * d - af;
         te[8] = ae * d + bf;
-        te[1] = c2 * f;
+        te[1] = c * f;
         te[5] = bf * d + ae;
         te[9] = af * d - be;
         te[2] = -d;
-        te[6] = b * c2;
-        te[10] = a * c2;
+        te[6] = b * c;
+        te[10] = a * c;
       } else if (euler.order === "YZX") {
-        const ac = a * c2, ad = a * d, bc = b * c2, bd = b * d;
-        te[0] = c2 * e;
+        const ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+        te[0] = c * e;
         te[4] = bd - ac * f;
         te[8] = bc * f + ad;
         te[1] = f;
@@ -3481,8 +3481,8 @@
         te[6] = ad * f + bc;
         te[10] = ac - bd * f;
       } else if (euler.order === "XZY") {
-        const ac = a * c2, ad = a * d, bc = b * c2, bd = b * d;
-        te[0] = c2 * e;
+        const ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+        te[0] = c * e;
         te[4] = -f;
         te[8] = d * e;
         te[1] = ac * f + bd;
@@ -3704,19 +3704,19 @@
       return this;
     }
     makeRotationX(theta) {
-      const c2 = Math.cos(theta), s = Math.sin(theta);
+      const c = Math.cos(theta), s = Math.sin(theta);
       this.set(
         1,
         0,
         0,
         0,
         0,
-        c2,
+        c,
         -s,
         0,
         0,
         s,
-        c2,
+        c,
         0,
         0,
         0,
@@ -3726,9 +3726,9 @@
       return this;
     }
     makeRotationY(theta) {
-      const c2 = Math.cos(theta), s = Math.sin(theta);
+      const c = Math.cos(theta), s = Math.sin(theta);
       this.set(
-        c2,
+        c,
         0,
         s,
         0,
@@ -3738,7 +3738,7 @@
         0,
         -s,
         0,
-        c2,
+        c,
         0,
         0,
         0,
@@ -3748,14 +3748,14 @@
       return this;
     }
     makeRotationZ(theta) {
-      const c2 = Math.cos(theta), s = Math.sin(theta);
+      const c = Math.cos(theta), s = Math.sin(theta);
       this.set(
-        c2,
+        c,
         -s,
         0,
         0,
         s,
-        c2,
+        c,
         0,
         0,
         0,
@@ -3770,23 +3770,23 @@
       return this;
     }
     makeRotationAxis(axis, angle) {
-      const c2 = Math.cos(angle);
+      const c = Math.cos(angle);
       const s = Math.sin(angle);
-      const t = 1 - c2;
+      const t = 1 - c;
       const x = axis.x, y = axis.y, z = axis.z;
       const tx = t * x, ty = t * y;
       this.set(
-        tx * x + c2,
+        tx * x + c,
         tx * y - s * z,
         tx * z + s * y,
         0,
         tx * y + s * z,
-        ty * y + c2,
+        ty * y + c,
         ty * z - s * x,
         0,
         tx * z - s * y,
         ty * z + s * x,
-        t * z * z + c2,
+        t * z * z + c,
         0,
         0,
         0,
@@ -3899,7 +3899,7 @@
       const y = 2 * near / (top - bottom);
       const a = (right + left) / (right - left);
       const b = (top + bottom) / (top - bottom);
-      const c2 = -(far + near) / (far - near);
+      const c = -(far + near) / (far - near);
       const d = -2 * far * near / (far - near);
       te[0] = x;
       te[4] = 0;
@@ -3911,7 +3911,7 @@
       te[13] = 0;
       te[2] = 0;
       te[6] = 0;
-      te[10] = c2;
+      te[10] = c;
       te[14] = d;
       te[3] = 0;
       te[7] = 0;
@@ -4741,13 +4741,13 @@
   var _vcp = /* @__PURE__ */ new Vector3();
   var warnedGetUV = false;
   var Triangle = class {
-    constructor(a = new Vector3(), b = new Vector3(), c2 = new Vector3()) {
+    constructor(a = new Vector3(), b = new Vector3(), c = new Vector3()) {
       this.a = a;
       this.b = b;
-      this.c = c2;
+      this.c = c;
     }
-    static getNormal(a, b, c2, target) {
-      target.subVectors(c2, b);
+    static getNormal(a, b, c, target) {
+      target.subVectors(c, b);
       _v0$1.subVectors(a, b);
       target.cross(_v0$1);
       const targetLengthSq = target.lengthSq();
@@ -4758,8 +4758,8 @@
     }
     // static/instance method to calculate barycentric coordinates
     // based on: http://www.blackpawn.com/texts/pointinpoly/default.html
-    static getBarycoord(point, a, b, c2, target) {
-      _v0$1.subVectors(c2, a);
+    static getBarycoord(point, a, b, c, target) {
+      _v0$1.subVectors(c, a);
       _v1$3.subVectors(b, a);
       _v2$2.subVectors(point, a);
       const dot00 = _v0$1.dot(_v0$1);
@@ -4776,8 +4776,8 @@
       const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
       return target.set(1 - u - v, v, u);
     }
-    static containsPoint(point, a, b, c2) {
-      this.getBarycoord(point, a, b, c2, _v3$1);
+    static containsPoint(point, a, b, c) {
+      this.getBarycoord(point, a, b, c, _v3$1);
       return _v3$1.x >= 0 && _v3$1.y >= 0 && _v3$1.x + _v3$1.y <= 1;
     }
     static getUV(point, p1, p2, p3, uv1, uv2, uv3, target) {
@@ -4795,15 +4795,15 @@
       target.addScaledVector(v3, _v3$1.z);
       return target;
     }
-    static isFrontFacing(a, b, c2, direction) {
-      _v0$1.subVectors(c2, b);
+    static isFrontFacing(a, b, c, direction) {
+      _v0$1.subVectors(c, b);
       _v1$3.subVectors(a, b);
       return _v0$1.cross(_v1$3).dot(direction) < 0 ? true : false;
     }
-    set(a, b, c2) {
+    set(a, b, c) {
       this.a.copy(a);
       this.b.copy(b);
-      this.c.copy(c2);
+      this.c.copy(c);
       return this;
     }
     setFromPointsAndIndices(points, i0, i1, i2) {
@@ -4864,10 +4864,10 @@
       return box.intersectsTriangle(this);
     }
     closestPointToPoint(p, target) {
-      const a = this.a, b = this.b, c2 = this.c;
+      const a = this.a, b = this.b, c = this.c;
       let v, w;
       _vab.subVectors(b, a);
-      _vac.subVectors(c2, a);
+      _vac.subVectors(c, a);
       _vap.subVectors(p, a);
       const d1 = _vab.dot(_vap);
       const d2 = _vac.dot(_vap);
@@ -4885,11 +4885,11 @@
         v = d1 / (d1 - d3);
         return target.copy(a).addScaledVector(_vab, v);
       }
-      _vcp.subVectors(p, c2);
+      _vcp.subVectors(p, c);
       const d5 = _vab.dot(_vcp);
       const d6 = _vac.dot(_vcp);
       if (d6 >= 0 && d5 <= d6) {
-        return target.copy(c2);
+        return target.copy(c);
       }
       const vb = d5 * d2 - d1 * d6;
       if (vb <= 0 && d2 >= 0 && d6 <= 0) {
@@ -4898,7 +4898,7 @@
       }
       const va = d3 * d6 - d5 * d4;
       if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) {
-        _vbc.subVectors(c2, b);
+        _vbc.subVectors(c, b);
         w = (d4 - d3) / (d4 - d3 + (d5 - d6));
         return target.copy(b).addScaledVector(_vbc, w);
       }
@@ -5750,8 +5750,8 @@
       this.b = e[2] * r + e[5] * g + e[8] * b;
       return this;
     }
-    equals(c2) {
-      return c2.r === this.r && c2.g === this.g && c2.b === this.b;
+    equals(c) {
+      return c.r === this.r && c.g === this.g && c.b === this.b;
     }
     fromArray(array, offset = 0) {
       this.r = array[offset];
@@ -6309,13 +6309,13 @@
         tan2[i] = new Vector3();
       }
       const vA = new Vector3(), vB = new Vector3(), vC = new Vector3(), uvA = new Vector2(), uvB = new Vector2(), uvC = new Vector2(), sdir = new Vector3(), tdir = new Vector3();
-      function handleTriangle(a, b, c2) {
+      function handleTriangle(a, b, c) {
         vA.fromArray(positions, a * 3);
         vB.fromArray(positions, b * 3);
-        vC.fromArray(positions, c2 * 3);
+        vC.fromArray(positions, c * 3);
         uvA.fromArray(uvs, a * 2);
         uvB.fromArray(uvs, b * 2);
-        uvC.fromArray(uvs, c2 * 2);
+        uvC.fromArray(uvs, c * 2);
         vB.sub(vA);
         vC.sub(vA);
         uvB.sub(uvA);
@@ -6327,10 +6327,10 @@
         tdir.copy(vC).multiplyScalar(uvB.x).addScaledVector(vB, -uvC.x).multiplyScalar(r);
         tan1[a].add(sdir);
         tan1[b].add(sdir);
-        tan1[c2].add(sdir);
+        tan1[c].add(sdir);
         tan2[a].add(tdir);
         tan2[b].add(tdir);
-        tan2[c2].add(tdir);
+        tan2[c].add(tdir);
       }
       let groups = this.groups;
       if (groups.length === 0) {
@@ -6737,8 +6737,8 @@
             for (let j = start, jl = end; j < jl; j += 3) {
               const a = index.getX(j);
               const b = index.getX(j + 1);
-              const c2 = index.getX(j + 2);
-              intersection = checkGeometryIntersection(this, groupMaterial, raycaster, _ray$2, uv, uv2, normal, a, b, c2);
+              const c = index.getX(j + 2);
+              intersection = checkGeometryIntersection(this, groupMaterial, raycaster, _ray$2, uv, uv2, normal, a, b, c);
               if (intersection) {
                 intersection.faceIndex = Math.floor(j / 3);
                 intersection.face.materialIndex = group.materialIndex;
@@ -6752,8 +6752,8 @@
           for (let i = start, il = end; i < il; i += 3) {
             const a = index.getX(i);
             const b = index.getX(i + 1);
-            const c2 = index.getX(i + 2);
-            intersection = checkGeometryIntersection(this, material, raycaster, _ray$2, uv, uv2, normal, a, b, c2);
+            const c = index.getX(i + 2);
+            intersection = checkGeometryIntersection(this, material, raycaster, _ray$2, uv, uv2, normal, a, b, c);
             if (intersection) {
               intersection.faceIndex = Math.floor(i / 3);
               intersects.push(intersection);
@@ -6770,8 +6770,8 @@
             for (let j = start, jl = end; j < jl; j += 3) {
               const a = j;
               const b = j + 1;
-              const c2 = j + 2;
-              intersection = checkGeometryIntersection(this, groupMaterial, raycaster, _ray$2, uv, uv2, normal, a, b, c2);
+              const c = j + 2;
+              intersection = checkGeometryIntersection(this, groupMaterial, raycaster, _ray$2, uv, uv2, normal, a, b, c);
               if (intersection) {
                 intersection.faceIndex = Math.floor(j / 3);
                 intersection.face.materialIndex = group.materialIndex;
@@ -6785,8 +6785,8 @@
           for (let i = start, il = end; i < il; i += 3) {
             const a = i;
             const b = i + 1;
-            const c2 = i + 2;
-            intersection = checkGeometryIntersection(this, material, raycaster, _ray$2, uv, uv2, normal, a, b, c2);
+            const c = i + 2;
+            intersection = checkGeometryIntersection(this, material, raycaster, _ray$2, uv, uv2, normal, a, b, c);
             if (intersection) {
               intersection.faceIndex = Math.floor(i / 3);
               intersects.push(intersection);
@@ -6816,28 +6816,28 @@
       object
     };
   }
-  function checkGeometryIntersection(object, material, raycaster, ray, uv, uv2, normal, a, b, c2) {
+  function checkGeometryIntersection(object, material, raycaster, ray, uv, uv2, normal, a, b, c) {
     object.getVertexPosition(a, _vA$1);
     object.getVertexPosition(b, _vB$1);
-    object.getVertexPosition(c2, _vC$1);
+    object.getVertexPosition(c, _vC$1);
     const intersection = checkIntersection(object, material, raycaster, ray, _vA$1, _vB$1, _vC$1, _intersectionPoint);
     if (intersection) {
       if (uv) {
         _uvA$1.fromBufferAttribute(uv, a);
         _uvB$1.fromBufferAttribute(uv, b);
-        _uvC$1.fromBufferAttribute(uv, c2);
+        _uvC$1.fromBufferAttribute(uv, c);
         intersection.uv = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2());
       }
       if (uv2) {
         _uvA$1.fromBufferAttribute(uv2, a);
         _uvB$1.fromBufferAttribute(uv2, b);
-        _uvC$1.fromBufferAttribute(uv2, c2);
+        _uvC$1.fromBufferAttribute(uv2, c);
         intersection.uv2 = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _uvA$1, _uvB$1, _uvC$1, new Vector2());
       }
       if (normal) {
         _normalA.fromBufferAttribute(normal, a);
         _normalB.fromBufferAttribute(normal, b);
-        _normalC.fromBufferAttribute(normal, c2);
+        _normalC.fromBufferAttribute(normal, c);
         intersection.normal = Triangle.getInterpolation(_intersectionPoint, _vA$1, _vB$1, _vC$1, _normalA, _normalB, _normalC, new Vector3());
         if (intersection.normal.dot(ray.direction) > 0) {
           intersection.normal.multiplyScalar(-1);
@@ -6846,7 +6846,7 @@
       const face = {
         a,
         b,
-        c: c2,
+        c,
         normal: new Vector3(),
         materialIndex: 0
       };
@@ -6919,10 +6919,10 @@
           for (let ix = 0; ix < gridX; ix++) {
             const a = numberOfVertices + ix + gridX1 * iy;
             const b = numberOfVertices + ix + gridX1 * (iy + 1);
-            const c2 = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
+            const c = numberOfVertices + (ix + 1) + gridX1 * (iy + 1);
             const d = numberOfVertices + (ix + 1) + gridX1 * iy;
             indices.push(a, b, d);
-            indices.push(b, c2, d);
+            indices.push(b, c, d);
             groupCount += 6;
           }
         }
@@ -7499,8 +7499,8 @@
       this.constant = -point.dot(this.normal);
       return this;
     }
-    setFromCoplanarPoints(a, b, c2) {
-      const normal = _vector1.subVectors(c2, b).cross(_vector2.subVectors(a, b)).normalize();
+    setFromCoplanarPoints(a, b, c) {
+      const normal = _vector1.subVectors(c, b).cross(_vector2.subVectors(a, b)).normalize();
       this.setFromNormalAndCoplanarPoint(normal, a);
       return this;
     }
@@ -7851,10 +7851,10 @@
         for (let ix = 0; ix < gridX; ix++) {
           const a = ix + gridX1 * iy;
           const b = ix + gridX1 * (iy + 1);
-          const c2 = ix + 1 + gridX1 * (iy + 1);
+          const c = ix + 1 + gridX1 * (iy + 1);
           const d = ix + 1 + gridX1 * iy;
           indices.push(a, b, d);
-          indices.push(b, c2, d);
+          indices.push(b, c, d);
         }
       }
       this.setIndex(indices);
@@ -10201,8 +10201,8 @@
         for (let i = 0, l = array.length; i < l; i += 3) {
           const a = array[i + 0];
           const b = array[i + 1];
-          const c2 = array[i + 2];
-          indices.push(a, b, b, c2, c2, a);
+          const c = array[i + 2];
+          indices.push(a, b, b, c, c, a);
         }
       } else {
         const array = geometryPosition.array;
@@ -10210,8 +10210,8 @@
         for (let i = 0, l = array.length / 3 - 1; i < l; i += 3) {
           const a = i + 0;
           const b = i + 1;
-          const c2 = i + 2;
-          indices.push(a, b, b, c2, c2, a);
+          const c = i + 2;
+          indices.push(a, b, b, c, c, a);
         }
       }
       const attribute = new (arrayNeedsUint32(indices) ? Uint32BufferAttribute : Uint16BufferAttribute)(indices, 1);
@@ -18838,6 +18838,149 @@
     }
   }
 
+  // node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
+  function mergeGeometries(geometries, useGroups = false) {
+    const isIndexed = geometries[0].index !== null;
+    const attributesUsed = new Set(Object.keys(geometries[0].attributes));
+    const morphAttributesUsed = new Set(Object.keys(geometries[0].morphAttributes));
+    const attributes = {};
+    const morphAttributes = {};
+    const morphTargetsRelative = geometries[0].morphTargetsRelative;
+    const mergedGeometry = new BufferGeometry();
+    let offset = 0;
+    for (let i = 0; i < geometries.length; ++i) {
+      const geometry = geometries[i];
+      let attributesCount = 0;
+      if (isIndexed !== (geometry.index !== null)) {
+        console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.");
+        return null;
+      }
+      for (const name in geometry.attributes) {
+        if (!attributesUsed.has(name)) {
+          console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.');
+          return null;
+        }
+        if (attributes[name] === void 0)
+          attributes[name] = [];
+        attributes[name].push(geometry.attributes[name]);
+        attributesCount++;
+      }
+      if (attributesCount !== attributesUsed.size) {
+        console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". Make sure all geometries have the same number of attributes.");
+        return null;
+      }
+      if (morphTargetsRelative !== geometry.morphTargetsRelative) {
+        console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". .morphTargetsRelative must be consistent throughout all geometries.");
+        return null;
+      }
+      for (const name in geometry.morphAttributes) {
+        if (!morphAttributesUsed.has(name)) {
+          console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ".  .morphAttributes must be consistent throughout all geometries.");
+          return null;
+        }
+        if (morphAttributes[name] === void 0)
+          morphAttributes[name] = [];
+        morphAttributes[name].push(geometry.morphAttributes[name]);
+      }
+      if (useGroups) {
+        let count;
+        if (isIndexed) {
+          count = geometry.index.count;
+        } else if (geometry.attributes.position !== void 0) {
+          count = geometry.attributes.position.count;
+        } else {
+          console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index " + i + ". The geometry must have either an index or a position attribute");
+          return null;
+        }
+        mergedGeometry.addGroup(offset, count, i);
+        offset += count;
+      }
+    }
+    if (isIndexed) {
+      let indexOffset = 0;
+      const mergedIndex = [];
+      for (let i = 0; i < geometries.length; ++i) {
+        const index = geometries[i].index;
+        for (let j = 0; j < index.count; ++j) {
+          mergedIndex.push(index.getX(j) + indexOffset);
+        }
+        indexOffset += geometries[i].attributes.position.count;
+      }
+      mergedGeometry.setIndex(mergedIndex);
+    }
+    for (const name in attributes) {
+      const mergedAttribute = mergeAttributes(attributes[name]);
+      if (!mergedAttribute) {
+        console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + name + " attribute.");
+        return null;
+      }
+      mergedGeometry.setAttribute(name, mergedAttribute);
+    }
+    for (const name in morphAttributes) {
+      const numMorphTargets = morphAttributes[name][0].length;
+      if (numMorphTargets === 0)
+        break;
+      mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};
+      mergedGeometry.morphAttributes[name] = [];
+      for (let i = 0; i < numMorphTargets; ++i) {
+        const morphAttributesToMerge = [];
+        for (let j = 0; j < morphAttributes[name].length; ++j) {
+          morphAttributesToMerge.push(morphAttributes[name][j][i]);
+        }
+        const mergedMorphAttribute = mergeAttributes(morphAttributesToMerge);
+        if (!mergedMorphAttribute) {
+          console.error("THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the " + name + " morphAttribute.");
+          return null;
+        }
+        mergedGeometry.morphAttributes[name].push(mergedMorphAttribute);
+      }
+    }
+    return mergedGeometry;
+  }
+  function mergeAttributes(attributes) {
+    let TypedArray;
+    let itemSize;
+    let normalized;
+    let arrayLength = 0;
+    for (let i = 0; i < attributes.length; ++i) {
+      const attribute = attributes[i];
+      if (attribute.isInterleavedBufferAttribute) {
+        console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. InterleavedBufferAttributes are not supported.");
+        return null;
+      }
+      if (TypedArray === void 0)
+        TypedArray = attribute.array.constructor;
+      if (TypedArray !== attribute.array.constructor) {
+        console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.");
+        return null;
+      }
+      if (itemSize === void 0)
+        itemSize = attribute.itemSize;
+      if (itemSize !== attribute.itemSize) {
+        console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.");
+        return null;
+      }
+      if (normalized === void 0)
+        normalized = attribute.normalized;
+      if (normalized !== attribute.normalized) {
+        console.error("THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.");
+        return null;
+      }
+      arrayLength += attribute.array.length;
+    }
+    const array = new TypedArray(arrayLength);
+    let offset = 0;
+    for (let i = 0; i < attributes.length; ++i) {
+      array.set(attributes[i].array, offset);
+      offset += attributes[i].array.length;
+    }
+    return new BufferAttribute(array, itemSize, normalized);
+  }
+  function mergeBufferGeometries(geometries, useGroups = false) {
+    console.warn("THREE.BufferGeometryUtils: mergeBufferGeometries() has been renamed to mergeGeometries().");
+    return mergeGeometries(geometries, useGroups);
+  }
+
   // src/index.ts
   main();
   function chonks(src, length) {
@@ -18869,9 +19012,9 @@
       };
     });
   }
-  var c = 0;
   function slicesToVoxels(slices) {
-    const r = [];
+    const gDash = [];
+    const material = new MeshLambertMaterial({ vertexColors: true });
     slices.forEach((slice, x) => {
       chonks(slice.data, slice.dims.w).reverse().forEach((row, y) => {
         row.forEach((px, z) => {
@@ -18879,15 +19022,21 @@
             return;
           const color = new Color(px.r, px.g, px.b);
           const geometry = new BoxGeometry(1, 1, 1);
-          const material = new MeshLambertMaterial({ color });
-          const cube = new Mesh(geometry, material);
-          cube.position.set(x, y, z);
-          ++c;
-          r.push(cube);
+          geometry.translate(x, y, z);
+          const positionAttribute = geometry.getAttribute("position");
+          const colors = [];
+          for (let _ = 0; _ < positionAttribute.count; _ += 3) {
+            colors.push(color.r, color.g, color.b);
+            colors.push(color.r, color.g, color.b);
+            colors.push(color.r, color.g, color.b);
+          }
+          geometry.setAttribute("color", new Float32BufferAttribute(colors, 3));
+          gDash.push(geometry);
         });
       });
     });
-    return r;
+    const g = mergeBufferGeometries(gDash);
+    return new Mesh(g, material);
   }
   function cctvPole(thickness, height, gab, plateFrame, plateAngle, color, display, camera, lights) {
     const epsilon = 0.1;
@@ -18898,6 +19047,9 @@
     const m0 = new Mesh(pole, mat);
     const m1 = new Mesh(handle, mat);
     const m2 = new Mesh(plate, mat);
+    m0.castShadow = true;
+    m1.castShadow = true;
+    m2.receiveShadow = true;
     const plateGroup = new Group();
     plateGroup.add(m2);
     if (display) {
@@ -18918,6 +19070,9 @@
         l.target.position.set(t.x, t.y, t.z + 1);
         plateGroup.add(l);
         plateGroup.add(l.target);
+        l.castShadow = true;
+        l.shadow.mapSize.width = 1024;
+        l.shadow.mapSize.height = 1024;
       });
     }
     m0.translateY(height * 0.5);
@@ -18938,6 +19093,7 @@
         loadSlice("assets/middle.png")
       ]);
       const renderer = new WebGLRenderer();
+      renderer.shadowMap.enabled = true;
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
       const scene = new Scene();
@@ -18952,13 +19108,16 @@
       terrainTexture.wrapT = RepeatWrapping;
       terrainTexture.repeat.set(32, 32);
       const terrainMaterial = new MeshLambertMaterial({ map: terrainTexture });
-      const plane = new Mesh(new PlaneGeometry(1e3, 1e3), terrainMaterial);
-      plane.material.side = DoubleSide;
-      plane.rotation.x = Math.PI * 0.5;
-      scene.add(plane);
+      const terrain = new Mesh(new PlaneGeometry(2048, 2048), terrainMaterial);
+      terrain.material.side = DoubleSide;
+      terrain.rotation.x = Math.PI * 0.5;
+      terrain.receiveShadow = true;
+      scene.add(terrain);
       const cubes = slicesToVoxels([side, semiddle, middle, middle, middle, semiddle, side]);
+      cubes.castShadow = true;
+      cubes.receiveShadow = true;
       const group = new Group();
-      cubes.forEach((c2) => group.add(c2));
+      group.add(cubes);
       const carBox = new Box3().setFromObject(group);
       const carCenter = new Vector3();
       carBox.getCenter(carCenter);
@@ -18976,6 +19135,7 @@
       headlights.forEach((h) => {
         const t = h.position;
         h.target.position.set(t.x, t.y, t.z - 1);
+        h.castShadow = true;
       });
       group.add(...headlights);
       group.add(...headlights.map((h) => h.target));
@@ -18993,12 +19153,13 @@
       const cctv = new PerspectiveCamera(75, cctvFrame.x / cctvFrame.y, 0.1, 1e3);
       const cctvAngle = Math.PI * 0.2;
       const cctvLights = [
-        new SpotLight(new Color(0.9, 0.9, 1), 2.2, 400, Math.PI * 0.32),
-        //new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.2, 400, Math.PI * .32),
-        new SpotLight(new Color(0.9, 0.9, 1), 2.2, 400, Math.PI * 0.32)
+        new SpotLight(new Color(0.9, 0.9, 1), 1.3, 400, Math.PI * 0.32),
+        new SpotLight(new Color(0.9, 0.9, 1), 1.3, 400, Math.PI * 0.32),
+        new SpotLight(new Color(0.9, 0.9, 1), 1.3, 400, Math.PI * 0.32)
       ];
       const cctvPoleGroup = cctvPole(2, 42, 12, cctvDisplay, cctvAngle, new Color(0.42, 0.42, 0.42), cctvDisplayPlane, cctv, cctvLights);
-      cctvPoleGroup.position.set(-60, 0, -64);
+      cctvPoleGroup.position.set(0, 0, -64);
+      cctvPoleGroup.rotateY(Math.PI * 0.2);
       scene.add(cctvPoleGroup);
       const keyboardState = {};
       function keyEvent(isDown, keyCode) {
@@ -19035,11 +19196,11 @@
   }
   function mainloop(state) {
     requestAnimationFrame(() => mainloop(state));
-    const acceleration = 0.03;
-    const deceleration = 0.01;
+    const acceleration = 0.01;
+    const deceleration = 6e-3;
     const maxSpeed = 1;
-    const steeringPower = 0.01;
-    const desteeringPower = steeringPower * 0.32;
+    const steeringPower = 1e-3;
+    const desteeringPower = steeringPower * 0.7;
     const steeringMax = Math.PI * 0.02;
     if (state.keyboard["KeyW"] || state.keyboard["KeyS"]) {
       if (state.keyboard["KeyW"])
