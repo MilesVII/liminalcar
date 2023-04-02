@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --sourcemap --outfile=src/index.js",
+    "watch": "esbuild src/index.ts --bundle --sourcemap --watch --outfile=src/index.js"
+  },
+  "dependencies": {
+    "esbuild": "0.17.14",
+    "three": "^0.151.2"
+  },
+  "devDependencies": {
+    "@types/three": "^0.150.0"
+  }
+}
