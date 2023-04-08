@@ -141,7 +141,8 @@ type State = {
 	car: {
 		speed: number,
 		steering: number,
-		group: THREE.Group
+		group: THREE.Group,
+		dims: Vector3
 	},
 	cctv: {
 		camera: THREE.Camera,
@@ -196,6 +197,8 @@ async function main(){
 	const g2 = new THREE.Group();
 	g2.add(group);
 
+	const dims = carBox.max.clone().sub(carBox.min);
+
 	const headlights = [
 		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.7, 100, Math.PI * .32),
 		new THREE.SpotLight(new THREE.Color(.9, .9, 1), 2.7, 100, Math.PI * .32)
@@ -210,10 +213,7 @@ async function main(){
 	group.add(...headlights);
 	group.add(...headlights.map(h => h.target));
 
-	camera.position.set(carBox.max.x * -.3, carBox.max.y * 1.1, carBox.max.z * 1.5);
-	camera.lookAt(carCenter);
-	camera.rotateY(-.25);
-	camera.translateX(-7);
+	setCameraPosition(camera, 0, dims.z * 2, dims.y * 2, carCenter);
 
 	group.add(camera);
 	scene.add(g2);
@@ -254,7 +254,8 @@ async function main(){
 		car: {
 			speed: 0,
 			steering: 0,
-			group: g2
+			group: g2,
+			dims
 		},
 		cctv: {
 			camera: cctv,
@@ -270,6 +271,11 @@ function moveTowardsZero(value: number, offset: number){
 		return value - offset;
 	else
 		return value + offset;
+}
+
+function setCameraPosition(camera: THREE.Camera, angle: number, radius: number, height: number, target: THREE.Vector3): void{
+	camera.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+	camera.lookAt(target);
 }
 
 function mainloop(state: State){
@@ -303,8 +309,15 @@ function mainloop(state: State){
 	state.car.group.getWorldDirection(direction);
 	state.car.group.position.addScaledVector(direction, -state.car.speed);
 
-	if (state.keyboard["KeyQ"]) state.camera.position.x += .1;
-	if (state.keyboard["KeyE"]) state.camera.position.x -= .1;
+	const lastCameraAngle = state.cameraAngle;
+	if (state.keyboard["KeyQ"]) state.cameraAngle += .042;
+	if (state.keyboard["KeyE"]) state.cameraAngle -= .042;
+	if (lastCameraAngle != state.cameraAngle){
+		const carBox = new THREE.Box3().setFromObject(state.car.group.children[0]);
+		const carCenter = new Vector3();
+		carBox.getCenter(carCenter);
+		setCameraPosition(state.camera, state.cameraAngle, state.car.dims.z * 2, state.car.dims.y * 2, carCenter);
+	}
 
 	state.renderer.setRenderTarget(state.cctv.rt);
 	state.renderer.render(state.scene, state.cctv.camera);

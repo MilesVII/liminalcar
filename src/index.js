@@ -19126,6 +19126,7 @@
       group.translateY(0.5);
       const g2 = new Group();
       g2.add(group);
+      const dims = carBox.max.clone().sub(carBox.min);
       const headlights = [
         new SpotLight(new Color(0.9, 0.9, 1), 2.7, 100, Math.PI * 0.32),
         new SpotLight(new Color(0.9, 0.9, 1), 2.7, 100, Math.PI * 0.32)
@@ -19139,10 +19140,7 @@
       });
       group.add(...headlights);
       group.add(...headlights.map((h) => h.target));
-      camera.position.set(carBox.max.x * -0.3, carBox.max.y * 1.1, carBox.max.z * 1.5);
-      camera.lookAt(carCenter);
-      camera.rotateY(-0.25);
-      camera.translateX(-7);
+      setCameraPosition(camera, 0, dims.z * 2, dims.y * 2, carCenter);
       group.add(camera);
       scene.add(g2);
       const cctvFrame = new Vector2(420, 200);
@@ -19176,7 +19174,8 @@
         car: {
           speed: 0,
           steering: 0,
-          group: g2
+          group: g2,
+          dims
         },
         cctv: {
           camera: cctv,
@@ -19193,6 +19192,10 @@
       return value - offset;
     else
       return value + offset;
+  }
+  function setCameraPosition(camera, angle, radius, height, target) {
+    camera.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+    camera.lookAt(target);
   }
   function mainloop(state) {
     requestAnimationFrame(() => mainloop(state));
@@ -19221,10 +19224,17 @@
     const direction = new Vector3();
     state.car.group.getWorldDirection(direction);
     state.car.group.position.addScaledVector(direction, -state.car.speed);
+    const lastCameraAngle = state.cameraAngle;
     if (state.keyboard["KeyQ"])
-      state.camera.position.x += 0.1;
+      state.cameraAngle += 0.042;
     if (state.keyboard["KeyE"])
-      state.camera.position.x -= 0.1;
+      state.cameraAngle -= 0.042;
+    if (lastCameraAngle != state.cameraAngle) {
+      const carBox = new Box3().setFromObject(state.car.group.children[0]);
+      const carCenter = new Vector3();
+      carBox.getCenter(carCenter);
+      setCameraPosition(state.camera, state.cameraAngle, state.car.dims.z * 2, state.car.dims.y * 2, carCenter);
+    }
     state.renderer.setRenderTarget(state.cctv.rt);
     state.renderer.render(state.scene, state.cctv.camera);
     state.renderer.setRenderTarget(null);
